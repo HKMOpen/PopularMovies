@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="title_movie_detail">Movie Detail</string>
+    <string name="error_loading_movie_page">Failed to load next page, please try again!</string>
+</resources>
