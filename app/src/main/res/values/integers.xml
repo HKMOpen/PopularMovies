@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-<integer name="number_of_columns">2</integer>
+    <integer name="number_of_columns">2</integer>
+    <integer name="movie_poster_weight">2</integer>
 
 </resources>

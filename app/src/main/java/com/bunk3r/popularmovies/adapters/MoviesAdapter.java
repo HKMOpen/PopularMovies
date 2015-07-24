@@ -7,10 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.model.Movie;
 import com.bunk3r.popularmovies.utils.StringUtils;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -36,11 +36,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieVH> {
         Context context = movieVH.itemView.getContext();
 
         if (!StringUtils.isEmpty(currentMovie.getPosterUrl())) {
-            Picasso.with(context)
+            Glide.with(context)
                     .load("http://image.tmdb.org/t/p/w185" + currentMovie.getPosterUrl())
-                    .placeholder(R.drawable.hourglass)
-                    .noFade()
-                    .fit()
                     .into(movieVH.picture);
         }
 

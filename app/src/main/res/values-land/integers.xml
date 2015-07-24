@@ -2,5 +2,6 @@
 <resources>
 
     <integer name="number_of_columns">4</integer>
+    <integer name="movie_poster_weight">1</integer>
 
 </resources>
