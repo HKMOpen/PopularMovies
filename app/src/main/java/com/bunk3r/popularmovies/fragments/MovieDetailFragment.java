@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bunk3r.popularmovies.Constants;
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.activities.MovieDetailActivity;
 import com.bunk3r.popularmovies.activities.MovieListActivity;
@@ -30,11 +31,18 @@ public class MovieDetailFragment extends Fragment {
     private ImageView mPoster;
     private TextView mTitle;
     private TextView mReleaseDate;
-    private TextView mDuration;
     private TextView mRating;
     private TextView mOverview;
 
     private Movie mCurrentMovie;
+
+    public static MovieDetailFragment newInstance(Movie movie) {
+        Bundle arguments = new Bundle();
+        arguments.putParcelable(MovieDetailFragment.ARG_IN_MOVIE, movie);
+        MovieDetailFragment fragment = new MovieDetailFragment();
+        fragment.setArguments(arguments);
+        return fragment;
+    }
 
     public MovieDetailFragment() {
     }
@@ -53,7 +61,6 @@ public class MovieDetailFragment extends Fragment {
         mPoster = (ImageView) root.findViewById(R.id.movie_poster);
         mTitle = (TextView) root.findViewById(R.id.movie_title);
         mReleaseDate = (TextView) root.findViewById(R.id.movie_release_date);
-        mDuration = (TextView) root.findViewById(R.id.movie_duration);
         mRating = (TextView) root.findViewById(R.id.movie_rating);
         mOverview = (TextView) root.findViewById(R.id.movie_overview);
 
@@ -64,25 +71,34 @@ public class MovieDetailFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Only load the image if a url is available
         if (!StringUtils.isEmpty(mCurrentMovie.getPosterUrl())) {
+            mPoster.setScaleType(ImageView.ScaleType.FIT_XY);
             Glide.with(this)
-                    .load("http://image.tmdb.org/t/p/w185" + mCurrentMovie.getPosterUrl())
+                    .load(Constants.IMG_BASE_URL + mCurrentMovie.getPosterUrl())
+                    .fitCenter()
+                    .into(mPoster);
+        } else {
+            mPoster.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            Glide.with(this)
+                    .load(R.drawable.no_image_available)
                     .into(mPoster);
         }
 
         mTitle.setText(mCurrentMovie.getTitle());
 
+        // If the date is not available we show a "dash" instead
         if (mCurrentMovie.getReleaseDate() != null) {
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(mCurrentMovie.getReleaseDate());
             mReleaseDate.setText(String.valueOf(calendar.get(Calendar.YEAR)));
         } else {
-            mReleaseDate.setText("-");
+            mReleaseDate.setText(R.string.movie_release_missing);
         }
 
-        mDuration.setText("999 min");
-
-        mRating.setText(String.valueOf((float)((int) (mCurrentMovie.getVoteAverage() * 10)) / 10));
+        // truncate the rating to 1 character after the dot
+        final float movieRating = (float)((int) (mCurrentMovie.getVoteAverage() * 10)) / 10;
+        mRating.setText(getString(R.string.movie_rating_style, movieRating, Constants.MAX_RATING));
 
         mOverview.setText(mCurrentMovie.getOverview());
     }

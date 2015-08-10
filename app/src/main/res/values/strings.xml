@@ -1,5 +1,11 @@
 <resources>
-    <string name="app_name">Popular Movies</string>
+    <string name="app_name">Movies</string>
     <string name="title_movie_detail">Movie Detail</string>
     <string name="error_loading_movie_page">Failed to load next page, please try again!</string>
+    <string name="movie_sort_title">Sort by</string>
+    <string name="movie_rating_style">%1$1.1f / %2$2.1f</string>
+    <string name="movie_release_missing">-</string>
+    <string name="movie_release_date_title">Release Date</string>
+    <string name="movie_rating_title">Rating</string>
+    <string name="movie_overview_title">Overview</string>
 </resources>

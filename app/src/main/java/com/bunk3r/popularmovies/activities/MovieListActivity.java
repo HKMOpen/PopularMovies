@@ -2,7 +2,7 @@ package com.bunk3r.popularmovies.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.fragments.MovieDetailFragment;
@@ -24,7 +24,7 @@ import com.bunk3r.popularmovies.model.Movie;
  * (if present) is a {@link MovieDetailFragment}.
  * <p/>
  */
-public class MovieListActivity extends FragmentActivity implements MovieListener {
+public class MovieListActivity extends AppCompatActivity implements MovieListener {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -54,21 +54,11 @@ public class MovieListActivity extends FragmentActivity implements MovieListener
     @Override
     public void showMovieDetails(Movie movie) {
         if (mTwoPane) {
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
-            Bundle arguments = new Bundle();
-            arguments.putParcelable(MovieDetailFragment.ARG_IN_MOVIE, movie);
-
-            MovieDetailFragment fragment = new MovieDetailFragment();
-            fragment.setArguments(arguments);
+            MovieDetailFragment fragment = MovieDetailFragment.newInstance(movie);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.movie_detail_container, fragment)
                     .commit();
-
         } else {
-            // In single-pane mode, simply start the detail activity
-            // for the selected item ID.
             Intent detailIntent = new Intent(this, MovieDetailActivity.class);
             detailIntent.putExtra(MovieDetailActivity.ARG_IN_MOVIE, movie);
             startActivity(detailIntent);

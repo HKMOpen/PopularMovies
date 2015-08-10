@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bunk3r.popularmovies.Constants;
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.model.Movie;
 import com.bunk3r.popularmovies.utils.StringUtils;
@@ -36,8 +37,14 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieVH> {
         Context context = movieVH.itemView.getContext();
 
         if (!StringUtils.isEmpty(currentMovie.getPosterUrl())) {
+            movieVH.picture.setScaleType(ImageView.ScaleType.FIT_XY);
             Glide.with(context)
-                    .load("http://image.tmdb.org/t/p/w185" + currentMovie.getPosterUrl())
+                    .load(Constants.IMG_BASE_URL + currentMovie.getPosterUrl())
+                    .into(movieVH.picture);
+        } else {
+            movieVH.picture.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            Glide.with(context)
+                    .load(R.drawable.no_image_available)
                     .into(movieVH.picture);
         }
 

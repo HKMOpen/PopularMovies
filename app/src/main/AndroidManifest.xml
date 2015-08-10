@@ -13,11 +13,9 @@
 
         <activity
             android:name=".activities.MovieListActivity"
-            android:label="@string/app_name"
-            android:launchMode="singleInstance">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -25,7 +23,6 @@
         <activity
             android:name=".activities.MovieDetailActivity"
             android:label="@string/title_movie_detail"
-            android:launchMode="singleInstance"
             android:parentActivityName=".activities.MovieListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

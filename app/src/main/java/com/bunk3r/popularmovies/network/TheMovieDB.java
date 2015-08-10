@@ -6,6 +6,17 @@ import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.network.apis.TheMovieDbApi;
 import com.bunk3r.popularmovies.network.responses.DiscoverMoviesResponse;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+
+import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import retrofit.Callback;
 import retrofit.RequestInterceptor;
@@ -17,8 +28,21 @@ public class TheMovieDB {
 
     private static final String BASE_URL = "https://api.themoviedb.org/3";
     private static final String HEADER_API_KEY_NAME = "api_key";
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
+    private static final String DEFAULT_CONTENT_TYPE = "application/json;charset=UTF-8";
     private static final Converter GSON_PARSER = new GsonConverter(new GsonBuilder()
-            .setDateFormat("yyyy-MM-dd")
+            .registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                @Override
+                public Date deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
+                        throws JsonParseException {
+                    try {
+                        return df.parse(json.getAsString());
+                    } catch (ParseException e) {
+                        return null;
+                    }
+                }
+            })
             .create());
 
     private static TheMovieDB mInstance;
@@ -46,6 +70,7 @@ public class TheMovieDB {
             @Override
             public void intercept(RequestFacade request) {
                 request.addQueryParam(HEADER_API_KEY_NAME, mApiKey);
+                request.addQueryParam(HEADER_CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             }
         };
 

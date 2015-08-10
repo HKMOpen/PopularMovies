@@ -3,20 +3,30 @@ package com.bunk3r.popularmovies.fragments;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.bunk3r.popularmovies.Constants;
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.adapters.MoviesAdapter;
+import com.bunk3r.popularmovies.adapters.SortAdapter;
+import com.bunk3r.popularmovies.enums.SortProperty;
 import com.bunk3r.popularmovies.listeners.MovieListener;
 import com.bunk3r.popularmovies.model.Movie;
 import com.bunk3r.popularmovies.network.TheMovieDB;
 import com.bunk3r.popularmovies.network.responses.DiscoverMoviesResponse;
-import com.bunk3r.popularmovies.utils.Constants;
+import com.bunk3r.popularmovies.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,17 +41,26 @@ import retrofit.client.Response;
  * 'activated' state upon selection. This helps indicate which item is
  * currently being viewed in a {@link MovieDetailFragment}.
  */
-public class MovieListFragment extends Fragment implements Callback<DiscoverMoviesResponse>, MoviesAdapter.OnInteractionListener {
+public class MovieListFragment extends Fragment implements Callback<DiscoverMoviesResponse>,
+        MoviesAdapter.OnInteractionListener,
+        AdapterView.OnItemSelectedListener {
+
+    protected final String TAG = getClass().getSimpleName();
 
     private static final String NEXT_PAGE_ID = "next_page_to_load";
+    private static final String SORTING_TYPE = "sort_type_to_use";
     private static final String LIST_OF_LOADED_MOVIES = "loaded_movies";
     private static final String FIRST_MOVIE_ON_SCREEN = "current_movie_on_Screen";
 
     private final AtomicBoolean isLoading = new AtomicBoolean(false);
 
     private int mNextPage = 1;
-    private ArrayList<Movie> mMovies;
+    private int mColumns;
+    private String mSortType;
+    private ArrayList<Movie> mMovies = new ArrayList<>(Constants.NUMBER_OF_MOVIES_PER_PAGE);
     private int mFirstVisibleMovie;
+    private InfinityScrollListener mScrollerListener = new InfinityScrollListener();
+    private View mProgressContainer;
     private RecyclerView mList;
     private GridLayoutManager mLayoutManager;
     private MovieListener mCallback;
@@ -53,15 +72,16 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final int numberOfColumns = getResources().getInteger(R.integer.number_of_columns);
-        mLayoutManager = new GridLayoutManager(getActivity(), numberOfColumns);
+        setHasOptionsMenu(true);
+
+        mColumns = getResources().getInteger(R.integer.number_of_columns);
+        mLayoutManager = new GridLayoutManager(getActivity(), mColumns);
 
         if (savedInstanceState != null) {
             mNextPage = savedInstanceState.getInt(NEXT_PAGE_ID);
+            mSortType = savedInstanceState.getString(SORTING_TYPE);
             mFirstVisibleMovie = savedInstanceState.getInt(FIRST_MOVIE_ON_SCREEN);
             mMovies = savedInstanceState.getParcelableArrayList(LIST_OF_LOADED_MOVIES);
-        } else {
-            loadNextPage();
         }
     }
 
@@ -69,34 +89,9 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_movie_list, container, false);
 
+        mProgressContainer = root.findViewById(R.id.loading_more);
         mList = (RecyclerView) root.findViewById(R.id.movie_list_results);
-        mList.addOnScrollListener(new RecyclerView.OnScrollListener() {
-
-            private int maxScrollY = 0;
-            private int overallScrollY = 0;
-
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-
-                overallScrollY += dy;
-
-                mFirstVisibleMovie = mLayoutManager.findFirstCompletelyVisibleItemPosition();
-
-                if (maxScrollY <= overallScrollY) {
-                    maxScrollY = overallScrollY;
-
-                    if (mLayoutManager.findLastVisibleItemPosition() == mLayoutManager.getItemCount() - 1) {
-                        loadNextPage();
-                    }
-                }
-            }
-        });
+        mList.addOnScrollListener(mScrollerListener);
 
         return root;
     }
@@ -106,7 +101,7 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
         super.onViewCreated(view, savedInstanceState);
         mList.setLayoutManager(mLayoutManager);
 
-        if (mMovies != null) {
+        if (!mMovies.isEmpty()) {
             MoviesAdapter adapter = new MoviesAdapter(mMovies);
             adapter.setOnInteractionListener(this);
             mList.setAdapter(adapter);
@@ -115,8 +110,10 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
             if (mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0 && mLayoutManager.findLastCompletelyVisibleItemPosition() == mLayoutManager.getItemCount() - 1) {
                 loadNextPage();
             } else {
-                mLayoutManager.scrollToPosition(mFirstVisibleMovie);
+                mList.scrollToPosition(mFirstVisibleMovie);
             }
+        } else {
+            loadNextPage();
         }
     }
 
@@ -130,27 +127,37 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.movie_list_menu, menu);
+        MenuItem item = menu.findItem(R.id.menu_item_sort_type);
+        Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
+        spinner.setAdapter(new SortAdapter(getActivity(), SortProperty.values()));
+        spinner.setOnItemSelectedListener(this);
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(NEXT_PAGE_ID, mNextPage);
+        outState.putString(SORTING_TYPE, mSortType);
         outState.putInt(FIRST_MOVIE_ON_SCREEN, mFirstVisibleMovie);
         outState.putParcelableArrayList(LIST_OF_LOADED_MOVIES, mMovies);
     }
 
     private void loadNextPage() {
         if (isLoading.compareAndSet(false, true)) {
-            TheMovieDB.getInstance().getMovies(mNextPage, "popularity.desc", this);
+            mProgressContainer.setVisibility(View.VISIBLE);
+            TheMovieDB.getInstance().getMovies(mNextPage, mSortType, this);
         }
     }
 
     @Override
     public void success(DiscoverMoviesResponse discoverMoviesResponse, Response response) {
+        isLoading.set(false);
         if (isAdded() && !isRemoving()) {
-            isLoading.set(false);
+            mProgressContainer.setVisibility(View.INVISIBLE);
             mNextPage++;
-            if (mMovies == null) {
-                mMovies = new ArrayList<>(Constants.NUMBER_OF_MOVIES_PER_PAGE);
-            }
 
             mMovies.addAll(discoverMoviesResponse.getResults());
             MoviesAdapter adapter = new MoviesAdapter(mMovies);
@@ -166,8 +173,10 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
 
     @Override
     public void failure(RetrofitError error) {
+        isLoading.set(false);
         if (isAdded() && !isRemoving()) {
-            isLoading.set(false);
+            mProgressContainer.setVisibility(View.INVISIBLE);
+            Log.d(TAG, error.getMessage());
             Toast.makeText(getActivity(), R.string.error_loading_movie_page, Toast.LENGTH_SHORT).show();
         }
     }
@@ -175,6 +184,58 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
     @Override
     public void onMovieSelected(Movie movie) {
         mCallback.showMovieDetails(movie);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        SortProperty property = SortProperty.values()[position];
+        String sortType = property.getPropertyValue();
+        if (StringUtils.isEmpty(mSortType) || !mSortType.equals(sortType)) {
+            mScrollerListener.reset();
+            mSortType = sortType;
+            mNextPage = 1;
+            mMovies.clear();
+            loadNextPage();
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        // STUB
+    }
+
+    private class InfinityScrollListener extends RecyclerView.OnScrollListener {
+
+        private int maxScrollY;
+        private int overallScrollY;
+
+        public InfinityScrollListener() {
+            reset();
+        }
+
+        public void reset() {
+            maxScrollY = 0;
+            overallScrollY = 0;
+        }
+
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+        }
+
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+            overallScrollY += dy;
+            mFirstVisibleMovie = mLayoutManager.findFirstCompletelyVisibleItemPosition();
+            if (maxScrollY <= overallScrollY) {
+                maxScrollY = overallScrollY;
+                if (mLayoutManager.findLastVisibleItemPosition() >= mLayoutManager.getItemCount() - (mColumns * 3)) {
+                    loadNextPage();
+                }
+            }
+        }
+
     }
 
 }
