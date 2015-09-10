@@ -2,6 +2,7 @@ package com.bunk3r.popularmovies.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,9 +15,16 @@ import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.activities.MovieDetailActivity;
 import com.bunk3r.popularmovies.activities.MovieListActivity;
 import com.bunk3r.popularmovies.model.Movie;
+import com.bunk3r.popularmovies.network.TheMovieDB;
+import com.bunk3r.popularmovies.network.responses.RelatedVideosResponse;
+import com.bunk3r.popularmovies.network.responses.ReviewsResponse;
 import com.bunk3r.popularmovies.utils.StringUtils;
 
 import java.util.Calendar;
+
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 /**
  * A fragment representing a single Movie detail screen.
@@ -26,6 +34,7 @@ import java.util.Calendar;
  */
 public class MovieDetailFragment extends Fragment {
 
+    private static final String TAG = MovieDetailFragment.class.getSimpleName();
     public static final String ARG_IN_MOVIE = "MovieDetailFragment_arg_in_movie";
 
     private ImageView mPoster;
@@ -52,6 +61,31 @@ public class MovieDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         mCurrentMovie = getArguments().getParcelable(ARG_IN_MOVIE);
+        if (mCurrentMovie != null) {
+            TheMovieDB.getInstance().getRelatedVideos(mCurrentMovie.getMovieId(), new Callback<RelatedVideosResponse>() {
+                @Override
+                public void success(RelatedVideosResponse relatedVideosResponse, Response response) {
+                    Log.d(TAG, "trailers: " + relatedVideosResponse.getResults().size());
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    Log.d(TAG, error.getMessage());
+                }
+            });
+
+            TheMovieDB.getInstance().getReviews(1, mCurrentMovie.getMovieId(), new Callback<ReviewsResponse>() {
+                @Override
+                public void success(ReviewsResponse reviewsResponse, Response response) {
+                    Log.d(TAG, "reviews: " + reviewsResponse.getResults().size());
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    Log.d(TAG, error.getMessage());
+                }
+            });
+        }
     }
 
     @Override
@@ -75,7 +109,7 @@ public class MovieDetailFragment extends Fragment {
         if (!StringUtils.isEmpty(mCurrentMovie.getPosterUrl())) {
             mPoster.setScaleType(ImageView.ScaleType.FIT_XY);
             Glide.with(this)
-                    .load(Constants.IMG_BASE_URL + mCurrentMovie.getPosterUrl())
+                    .load(mCurrentMovie.getPosterUrl())
                     .fitCenter()
                     .into(mPoster);
         } else {

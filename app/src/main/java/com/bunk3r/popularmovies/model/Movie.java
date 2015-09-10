@@ -3,12 +3,13 @@ package com.bunk3r.popularmovies.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.bunk3r.popularmovies.Constants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Date;
 
 @SuppressWarnings("unused")
-public class Movie implements Parcelable {
+public class Movie implements Parcelable, RecyclerObject{
 
     @SerializedName("id")private long mId;
     @SerializedName("original_title")private String mOrgTitle;
@@ -61,7 +62,7 @@ public class Movie implements Parcelable {
     }
 
     public String getPosterUrl() {
-        return mPoster;
+        return Constants.IMG_BASE_URL + mPoster;
     }
 
     public float getPopularity() {
@@ -82,6 +83,11 @@ public class Movie implements Parcelable {
 
     public boolean isAdultVideo() {
         return mAdult;
+    }
+
+    @Override
+    public int recyclerType() {
+        return MOVIE_TYPE;
     }
 
     public static final Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>() {

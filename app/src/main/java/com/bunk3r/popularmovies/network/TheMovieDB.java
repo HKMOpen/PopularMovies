@@ -5,6 +5,8 @@ import android.content.Context;
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.network.apis.TheMovieDbApi;
 import com.bunk3r.popularmovies.network.responses.DiscoverMoviesResponse;
+import com.bunk3r.popularmovies.network.responses.RelatedVideosResponse;
+import com.bunk3r.popularmovies.network.responses.ReviewsResponse;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -84,6 +86,16 @@ public class TheMovieDB {
     public void getMovies(int pageId, String sortBy, Callback<DiscoverMoviesResponse> callback) {
         TheMovieDbApi theMovieDb = getRestAdapter().create(TheMovieDbApi.class);
         theMovieDb.discoverMovies(pageId, sortBy, callback);
+    }
+
+    public void getRelatedVideos(long movieId, Callback<RelatedVideosResponse> callback) {
+        TheMovieDbApi theMovieDb = getRestAdapter().create(TheMovieDbApi.class);
+        theMovieDb.relatedVideos(movieId, callback);
+    }
+
+    public void getReviews(int pageId, long movieId, Callback<ReviewsResponse> callback) {
+        TheMovieDbApi theMovieDb = getRestAdapter().create(TheMovieDbApi.class);
+        theMovieDb.reviews(pageId, movieId, callback);
     }
 
 }
