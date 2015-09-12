@@ -56,6 +56,10 @@ public class RelatedVideo implements RecyclerObject {
         return type;
     }
 
+    public String getVideoUrl() {
+        return Constants.VIDEO_YOUTUBE_URL + key;
+    }
+
     public String getThumbnail() {
         return String.format(Locale.ENGLISH, Constants.IMG_YOUTUBE_URL, key);
     }

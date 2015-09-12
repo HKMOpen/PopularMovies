@@ -1,113 +1,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MovieDetailFragment">
 
-    <TextView
-        android:id="@+id/movie_title"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/movie_details_recycler"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/movie_detail_title_height"
-        android:background="@color/light_green"
-        android:gravity="start|center_vertical"
-        android:ellipsize="end"
-        android:lines="@integer/number_of_lines_for_title"
-        android:textColor="@color/white"
-        android:paddingLeft="@dimen/default_margin"
-        android:paddingRight="@dimen/default_margin"
-        android:textSize="@dimen/movie_detail_title_size"
-        tools:text="Movie Title (this is just to increase the size of the title)" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/default_half_margin"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_horizontal"
-                android:weightSum="3">
-
-                <com.bunk3r.popularmovies.views.GridImageView
-                    android:id="@+id/movie_poster"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="@integer/movie_poster_weight"
-                    app:ratio="0.666666" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/movie_release_date_label"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:labelFor="@+id/movie_release_date"
-                        android:text="@string/movie_release_date_title"
-                        android:textSize="@dimen/movie_detail_rating_size" />
-
-                    <TextView
-                        android:id="@+id/movie_release_date"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/default_half_margin"
-                        android:layout_marginTop="@dimen/default_half_margin"
-                        android:textSize="@dimen/movie_detail_info_size"
-                        tools:text="Some text" />
-
-                    <TextView
-                        android:id="@+id/movie_rating_label"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:labelFor="@+id/movie_rating"
-                        android:text="@string/movie_rating_title"
-                        android:textSize="@dimen/movie_detail_rating_size" />
-
-                    <TextView
-                        android:id="@+id/movie_rating"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/default_half_margin"
-                        android:layout_marginTop="@dimen/default_half_margin"
-                        android:textSize="@dimen/movie_detail_info_size"
-                        tools:text="Some text" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/movie_overview_label"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_half_margin"
-                android:labelFor="@+id/movie_overview"
-                android:text="@string/movie_overview_title"
-                android:textSize="@dimen/movie_detail_rating_size" />
-
-            <TextView
-                android:id="@+id/movie_overview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_half_margin"
-                android:textSize="@dimen/movie_detail_overview_size"
-                tools:text="This is the description of a movie" />
-
-        </LinearLayout>
-
-    </ScrollView>
+        android:layout_height="match_parent" />
 
 </LinearLayout>

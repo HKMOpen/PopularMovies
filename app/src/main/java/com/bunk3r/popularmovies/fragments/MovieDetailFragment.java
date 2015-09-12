@@ -1,26 +1,26 @@
 package com.bunk3r.popularmovies.fragments;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bunk3r.popularmovies.Constants;
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.activities.MovieDetailActivity;
 import com.bunk3r.popularmovies.activities.MovieListActivity;
+import com.bunk3r.popularmovies.adapters.MovieDetailsAdapter;
 import com.bunk3r.popularmovies.model.Movie;
+import com.bunk3r.popularmovies.model.RelatedVideo;
 import com.bunk3r.popularmovies.network.TheMovieDB;
 import com.bunk3r.popularmovies.network.responses.RelatedVideosResponse;
 import com.bunk3r.popularmovies.network.responses.ReviewsResponse;
-import com.bunk3r.popularmovies.utils.StringUtils;
-
-import java.util.Calendar;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -32,16 +32,13 @@ import retrofit.client.Response;
  * in two-pane mode (on tablets) or a {@link MovieDetailActivity}
  * on handsets.
  */
-public class MovieDetailFragment extends Fragment {
+public class MovieDetailFragment extends Fragment implements MovieDetailsAdapter.OnInteractionListener {
 
     private static final String TAG = MovieDetailFragment.class.getSimpleName();
     public static final String ARG_IN_MOVIE = "MovieDetailFragment_arg_in_movie";
 
-    private ImageView mPoster;
-    private TextView mTitle;
-    private TextView mReleaseDate;
-    private TextView mRating;
-    private TextView mOverview;
+    private RecyclerView mMovieDetailsRecycler;
+    private MovieDetailsAdapter mMovieDetailsAdapter;
 
     private Movie mCurrentMovie;
 
@@ -65,7 +62,7 @@ public class MovieDetailFragment extends Fragment {
             TheMovieDB.getInstance().getRelatedVideos(mCurrentMovie.getMovieId(), new Callback<RelatedVideosResponse>() {
                 @Override
                 public void success(RelatedVideosResponse relatedVideosResponse, Response response) {
-                    Log.d(TAG, "trailers: " + relatedVideosResponse.getResults().size());
+                    mMovieDetailsAdapter.addItems(relatedVideosResponse.getResults());
                 }
 
                 @Override
@@ -77,7 +74,7 @@ public class MovieDetailFragment extends Fragment {
             TheMovieDB.getInstance().getReviews(1, mCurrentMovie.getMovieId(), new Callback<ReviewsResponse>() {
                 @Override
                 public void success(ReviewsResponse reviewsResponse, Response response) {
-                    Log.d(TAG, "reviews: " + reviewsResponse.getResults().size());
+                    mMovieDetailsAdapter.addItems(reviewsResponse.getResults());
                 }
 
                 @Override
@@ -92,11 +89,7 @@ public class MovieDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View root = inflater.inflate(R.layout.fragment_movie_detail, container, false);
 
-        mPoster = (ImageView) root.findViewById(R.id.movie_poster);
-        mTitle = (TextView) root.findViewById(R.id.movie_title);
-        mReleaseDate = (TextView) root.findViewById(R.id.movie_release_date);
-        mRating = (TextView) root.findViewById(R.id.movie_rating);
-        mOverview = (TextView) root.findViewById(R.id.movie_overview);
+        mMovieDetailsRecycler = (RecyclerView) root.findViewById(R.id.movie_details_recycler);
 
         return root;
     }
@@ -105,35 +98,17 @@ public class MovieDetailFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Only load the image if a url is available
-        if (!StringUtils.isEmpty(mCurrentMovie.getPosterUrl())) {
-            mPoster.setScaleType(ImageView.ScaleType.FIT_XY);
-            Glide.with(this)
-                    .load(mCurrentMovie.getPosterUrl())
-                    .fitCenter()
-                    .into(mPoster);
-        } else {
-            mPoster.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            Glide.with(this)
-                    .load(R.drawable.no_image_available)
-                    .into(mPoster);
-        }
-
-        mTitle.setText(mCurrentMovie.getTitle());
-
-        // If the date is not available we show a "dash" instead
-        if (mCurrentMovie.getReleaseDate() != null) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(mCurrentMovie.getReleaseDate());
-            mReleaseDate.setText(String.valueOf(calendar.get(Calendar.YEAR)));
-        } else {
-            mReleaseDate.setText(R.string.movie_release_missing);
-        }
-
-        // truncate the rating to 1 character after the dot
-        final float movieRating = (float)((int) (mCurrentMovie.getVoteAverage() * 10)) / 10;
-        mRating.setText(getString(R.string.movie_rating_style, movieRating, Constants.MAX_RATING));
-
-        mOverview.setText(mCurrentMovie.getOverview());
+        mMovieDetailsAdapter = new MovieDetailsAdapter(mCurrentMovie);
+        mMovieDetailsAdapter.setOnInteractionListener(this);
+        mMovieDetailsRecycler.setAdapter(mMovieDetailsAdapter);
+        mMovieDetailsRecycler.setLayoutManager(new LinearLayoutManager(getActivity()));
     }
+
+    @Override
+    public void onVideoSelected(RelatedVideo video) {
+        Intent videoClient = new Intent(Intent.ACTION_VIEW);
+        videoClient.setData(Uri.parse(video.getVideoUrl()));
+        startActivityForResult(videoClient, Constants.OPEN_RELATED_VIDEO_CODE);
+    }
+
 }
