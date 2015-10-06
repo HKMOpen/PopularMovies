@@ -54,13 +54,13 @@ public class MovieListActivity extends AppCompatActivity implements MovieListene
     @Override
     public void showMovieDetails(Movie movie) {
         if (mTwoPane) {
-            MovieDetailFragment fragment = MovieDetailFragment.newInstance(movie);
+            MovieDetailFragment fragment = MovieDetailFragment.newInstance(movie.getId());
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.movie_detail_container, fragment)
                     .commit();
         } else {
             Intent detailIntent = new Intent(this, MovieDetailActivity.class);
-            detailIntent.putExtra(MovieDetailActivity.ARG_IN_MOVIE, movie);
+            detailIntent.putExtra(MovieDetailActivity.ARG_IN_MOVIE, movie.getId());
             startActivity(detailIntent);
         }
     }

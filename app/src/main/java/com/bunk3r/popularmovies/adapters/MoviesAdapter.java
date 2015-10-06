@@ -19,8 +19,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieVH> {
     private List<Movie> mMovies;
     private OnInteractionListener mListener;
 
-    public MoviesAdapter(List<Movie> tracks) {
-        mMovies = tracks;
+    public MoviesAdapter(List<Movie> movies) {
+        mMovies = movies;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieVH> {
 
     @Override
     public int getItemCount() {
-        return mMovies.size();
+        return mMovies == null ? 0 : mMovies.size();
     }
 
     public class MovieVH extends RecyclerView.ViewHolder {

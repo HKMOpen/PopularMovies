@@ -22,6 +22,7 @@ import com.bunk3r.popularmovies.network.TheMovieDB;
 import com.bunk3r.popularmovies.network.responses.RelatedVideosResponse;
 import com.bunk3r.popularmovies.network.responses.ReviewsResponse;
 
+import co.uk.rushorm.core.RushSearch;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -42,9 +43,9 @@ public class MovieDetailFragment extends Fragment implements MovieDetailsAdapter
 
     private Movie mCurrentMovie;
 
-    public static MovieDetailFragment newInstance(Movie movie) {
+    public static MovieDetailFragment newInstance(String movieId) {
         Bundle arguments = new Bundle();
-        arguments.putParcelable(MovieDetailFragment.ARG_IN_MOVIE, movie);
+        arguments.putString(ARG_IN_MOVIE, movieId);
         MovieDetailFragment fragment = new MovieDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -57,11 +58,14 @@ public class MovieDetailFragment extends Fragment implements MovieDetailsAdapter
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mCurrentMovie = getArguments().getParcelable(ARG_IN_MOVIE);
+        String movieId = getArguments().getString(ARG_IN_MOVIE);
+        mCurrentMovie = new RushSearch().whereId(movieId).findSingle(Movie.class);
         if (mCurrentMovie != null) {
             TheMovieDB.getInstance().getRelatedVideos(mCurrentMovie.getMovieId(), new Callback<RelatedVideosResponse>() {
                 @Override
                 public void success(RelatedVideosResponse relatedVideosResponse, Response response) {
+                    mCurrentMovie.setRelatedVideos(relatedVideosResponse.getResults());
+                    mCurrentMovie.save();
                     mMovieDetailsAdapter.addItems(relatedVideosResponse.getResults());
                 }
 
@@ -74,6 +78,8 @@ public class MovieDetailFragment extends Fragment implements MovieDetailsAdapter
             TheMovieDB.getInstance().getReviews(1, mCurrentMovie.getMovieId(), new Callback<ReviewsResponse>() {
                 @Override
                 public void success(ReviewsResponse reviewsResponse, Response response) {
+                    mCurrentMovie.setReviews(reviewsResponse.getResults());
+                    mCurrentMovie.save();
                     mMovieDetailsAdapter.addItems(reviewsResponse.getResults());
                 }
 

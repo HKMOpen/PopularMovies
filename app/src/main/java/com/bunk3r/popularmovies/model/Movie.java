@@ -7,82 +7,151 @@ import com.bunk3r.popularmovies.Constants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Date;
+import java.util.List;
+
+import co.uk.rushorm.core.RushObject;
+import co.uk.rushorm.core.annotations.RushList;
+import co.uk.rushorm.core.annotations.RushTableAnnotation;
 
 @SuppressWarnings("unused")
-public class Movie implements Parcelable, RecyclerObject{
+@RushTableAnnotation
+public class Movie extends RushObject implements Parcelable, RecyclerObject {
 
-    @SerializedName("id")private long mId;
-    @SerializedName("original_title")private String mOrgTitle;
-    @SerializedName("title")private String mTitle;
-    @SerializedName("overview")private String mOverview;
-    @SerializedName("release_date")private Date mRelease;
-    @SerializedName("original_language")private String mLanguage;
-    @SerializedName("genre_ids")private int[] mGenres;
+    @SerializedName("id")
+    private long id;
+    @SerializedName("original_title")
+    private String orgTitle;
+    @SerializedName("title")
+    private String title;
+    @SerializedName("overview")
+    private String overview;
+    @SerializedName("release_date")
+    private Date release;
+    @SerializedName("original_language")
+    private String language;
+    @SerializedName("genre_ids")
+    private int[] genres;
 
-    @SerializedName("backdrop_path")private String mBackdrop;
-    @SerializedName("poster_path")private String mPoster;
+    @SerializedName("backdrop_path")
+    private String backdrop;
+    @SerializedName("poster_path")
+    private String poster;
 
-    @SerializedName("popularity")private float mPopularity;
-    @SerializedName("vote_count")private long mVoteCnt;
-    @SerializedName("vote_average")private float mVoteAvg;
+    @SerializedName("popularity")
+    private float popularity;
+    @SerializedName("vote_count")
+    private long voteCnt;
+    @SerializedName("vote_average")
+    private float voteAvg;
 
-    @SerializedName("video")private boolean mVideo;
-    @SerializedName("adult")private boolean mAdult;
+    @SerializedName("video")
+    private boolean video;
+    @SerializedName("adult")
+    private boolean adult;
+
+    private boolean favorite;
+    @RushList(classType = Review.class)
+    private List<Review> reviews;
+    @RushList(classType = RelatedVideo.class)
+    private List<RelatedVideo> relatedVideos;
+
+    public Movie() {
+    }
+
+    public void updateInfo(Movie movie) {
+        orgTitle = movie.orgTitle;
+        title = movie.title;
+        overview = movie.overview;
+        release = movie.release;
+        language = movie.language;
+        genres = movie.genres;
+        backdrop = movie.backdrop;
+        poster = movie.poster;
+        popularity = movie.popularity;
+        voteCnt = movie.voteCnt;
+        voteAvg = movie.voteAvg;
+        video = movie.video;
+        adult = movie.adult;
+    }
 
     public long getMovieId(){
-        return mId;
+        return id;
     }
 
     public String getOriginalTitle() {
-        return mOrgTitle;
+        return orgTitle;
     }
 
     public String getTitle() {
-        return mTitle;
+        return title;
     }
 
     public String getOverview() {
-        return mOverview;
+        return overview;
     }
 
     public Date getReleaseDate() {
-        return mRelease;
+        return release;
     }
 
     public String getLanguage() {
-        return mLanguage;
+        return language;
     }
 
     public int[] getGenres() {
-        return mGenres;
+        return genres;
     }
 
     public String getBackdropUrl() {
-        return mBackdrop;
+        return backdrop;
     }
 
     public String getPosterUrl() {
-        return Constants.IMG_BASE_URL + mPoster;
+        return Constants.IMG_BASE_URL + poster;
     }
 
     public float getPopularity() {
-        return mPopularity;
+        return popularity;
     }
 
     public long getVoteCount() {
-        return mVoteCnt;
+        return voteCnt;
     }
 
     public float getVoteAverage() {
-        return mVoteAvg;
+        return voteAvg;
     }
 
     public boolean isVideo() {
-        return mVideo;
+        return video;
     }
 
     public boolean isAdultVideo() {
-        return mAdult;
+        return adult;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
+    }
+
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setRelatedVideos(List<RelatedVideo> relatedVideos) {
+        this.relatedVideos = relatedVideos;
+    }
+
+    public List<RelatedVideo> getRelatedVideos() {
+        return relatedVideos;
     }
 
     @Override
@@ -101,45 +170,45 @@ public class Movie implements Parcelable, RecyclerObject{
     };
 
     private Movie(Parcel in) {
-        mId = in.readLong();
-        mOrgTitle = in.readString();
-        mTitle = in.readString();
-        mOverview = in.readString();
+        id = in.readLong();
+        orgTitle = in.readString();
+        title = in.readString();
+        overview = in.readString();
         long releaseTime = in.readLong();
-        mRelease = releaseTime >= 0 ? new Date(releaseTime) : null;
-        mLanguage = in.readString();
-        mGenres = in.createIntArray();
+        release = releaseTime >= 0 ? new Date(releaseTime) : null;
+        language = in.readString();
+        genres = in.createIntArray();
 
-        mBackdrop = in.readString();
-        mPoster = in.readString();
+        backdrop = in.readString();
+        poster = in.readString();
 
-        mPopularity = in.readFloat();
-        mVoteCnt = in.readLong();
-        mVoteAvg = in.readFloat();
+        popularity = in.readFloat();
+        voteCnt = in.readLong();
+        voteAvg = in.readFloat();
 
-        mVideo = in.readByte() != 0;
-        mAdult = in.readByte() != 0;
+        video = in.readByte() != 0;
+        adult = in.readByte() != 0;
     }
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeLong(mId);
-        parcel.writeString(mOrgTitle);
-        parcel.writeString(mTitle);
-        parcel.writeString(mOverview);
-        parcel.writeLong(mRelease != null ? mRelease.getTime() : -1);
-        parcel.writeString(mLanguage);
-        parcel.writeIntArray(mGenres);
+        parcel.writeLong(id);
+        parcel.writeString(orgTitle);
+        parcel.writeString(title);
+        parcel.writeString(overview);
+        parcel.writeLong(release != null ? release.getTime() : -1);
+        parcel.writeString(language);
+        parcel.writeIntArray(genres);
 
-        parcel.writeString(mBackdrop);
-        parcel.writeString(mPoster);
+        parcel.writeString(backdrop);
+        parcel.writeString(poster);
 
-        parcel.writeFloat(mPopularity);
-        parcel.writeLong(mVoteCnt);
-        parcel.writeFloat(mVoteAvg);
+        parcel.writeFloat(popularity);
+        parcel.writeLong(voteCnt);
+        parcel.writeFloat(voteAvg);
 
-        parcel.writeByte((byte) (mVideo ? 1 : 0));
-        parcel.writeByte((byte)(mAdult ? 1 : 0));
+        parcel.writeByte((byte) (video ? 1 : 0));
+        parcel.writeByte((byte) (adult ? 1 : 0));
     }
 
     @Override
@@ -147,4 +216,28 @@ public class Movie implements Parcelable, RecyclerObject{
         return 0;
     }
 
+    @Override
+    public boolean equals(RecyclerObject recyclerObject) {
+        if (recyclerType() != recyclerObject.recyclerType()) {
+            return false;
+        }
+
+        Movie movie = (Movie) recyclerObject;
+        return id == movie.id;
+    }
+
+    @Override
+    public boolean hasChanged(RecyclerObject updated) {
+        if (!equals(updated)) {
+            return true;
+        }
+
+        Movie movie = (Movie) updated;
+        return !(overview.equals(movie.overview) &&
+                backdrop.equals(movie.backdrop) &&
+                poster.equals(movie.poster) &&
+                popularity == popularity &&
+                voteCnt == movie.voteCnt &&
+                voteAvg == movie.voteAvg);
+    }
 }

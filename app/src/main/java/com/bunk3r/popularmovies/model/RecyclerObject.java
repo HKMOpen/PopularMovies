@@ -8,4 +8,8 @@ public interface RecyclerObject {
 
     int recyclerType();
 
+    boolean equals(RecyclerObject recyclerObject);
+
+    boolean hasChanged(RecyclerObject updated);
+
 }

@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.bunk3r.popularmovies.R;
 import com.bunk3r.popularmovies.fragments.MovieDetailFragment;
-import com.bunk3r.popularmovies.model.Movie;
 
 /**
  * An activity representing a single Movie detail screen. This
@@ -33,8 +32,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         }
 
         if (savedInstanceState == null) {
-            Movie movie = getIntent().getParcelableExtra(ARG_IN_MOVIE);
-            MovieDetailFragment fragment = MovieDetailFragment.newInstance(movie);
+            String movieId = getIntent().getStringExtra(ARG_IN_MOVIE);
+            MovieDetailFragment fragment = MovieDetailFragment.newInstance(movieId);
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.movie_detail_container, fragment)
                     .commit();

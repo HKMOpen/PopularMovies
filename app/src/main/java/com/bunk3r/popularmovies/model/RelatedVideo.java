@@ -5,7 +5,11 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.Locale;
 
-public class RelatedVideo implements RecyclerObject {
+import co.uk.rushorm.core.RushObject;
+import co.uk.rushorm.core.annotations.RushTableAnnotation;
+
+@RushTableAnnotation
+public class RelatedVideo extends RushObject implements RecyclerObject {
 
     @SerializedName("id")
     private String id;
@@ -27,6 +31,8 @@ public class RelatedVideo implements RecyclerObject {
 
     @SerializedName("type")
     private String type;
+
+    public RelatedVideo() {}
 
     public String getId() {
         return id;
@@ -67,6 +73,28 @@ public class RelatedVideo implements RecyclerObject {
     @Override
     public int recyclerType() {
         return VIDEO_TYPE;
+    }
+
+    @Override
+    public boolean equals(RecyclerObject recyclerObject) {
+        if (recyclerType() != recyclerObject.recyclerType()) {
+            return false;
+        }
+
+        RelatedVideo relatedVideo = (RelatedVideo) recyclerObject;
+        return id.equals(relatedVideo.id);
+    }
+
+    @Override
+    public boolean hasChanged(RecyclerObject updated) {
+        if (!equals(updated)) {
+            return true;
+        }
+
+        RelatedVideo relatedVideo = (RelatedVideo) updated;
+
+        return !(key.equals(relatedVideo.key) &&
+                name.equals(relatedVideo.name));
     }
 
 }

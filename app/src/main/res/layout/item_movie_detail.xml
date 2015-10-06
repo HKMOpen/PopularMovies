@@ -28,6 +28,12 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
+            <CheckBox android:id="@+id/favorite"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="end"
+                style="?android:attr/starStyle" />
+
             <TextView
                 android:id="@+id/movie_release_date_label"
                 android:layout_width="match_parent"

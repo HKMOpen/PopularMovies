@@ -2,7 +2,6 @@ package com.bunk3r.popularmovies.fragments;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,17 +22,15 @@ import com.bunk3r.popularmovies.adapters.MoviesAdapter;
 import com.bunk3r.popularmovies.adapters.SortAdapter;
 import com.bunk3r.popularmovies.enums.SortProperty;
 import com.bunk3r.popularmovies.listeners.MovieListener;
+import com.bunk3r.popularmovies.listeners.MoviesLoadedListener;
 import com.bunk3r.popularmovies.model.Movie;
-import com.bunk3r.popularmovies.network.TheMovieDB;
-import com.bunk3r.popularmovies.network.responses.DiscoverMoviesResponse;
 import com.bunk3r.popularmovies.utils.StringUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import retrofit.Callback;
 import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 /**
  * A list fragment representing a list of Movies. This fragment
@@ -41,9 +38,9 @@ import retrofit.client.Response;
  * 'activated' state upon selection. This helps indicate which item is
  * currently being viewed in a {@link MovieDetailFragment}.
  */
-public class MovieListFragment extends Fragment implements Callback<DiscoverMoviesResponse>,
-        MoviesAdapter.OnInteractionListener,
-        AdapterView.OnItemSelectedListener {
+public class MovieListFragment extends BaseFragment implements MoviesAdapter.OnInteractionListener,
+        AdapterView.OnItemSelectedListener,
+        MoviesLoadedListener {
 
     protected final String TAG = getClass().getSimpleName();
 
@@ -53,6 +50,7 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
     private static final String FIRST_MOVIE_ON_SCREEN = "current_movie_on_Screen";
 
     private final AtomicBoolean isLoading = new AtomicBoolean(false);
+    private final AtomicBoolean pendingLoading = new AtomicBoolean(false);
 
     private int mNextPage = 1;
     private int mColumns;
@@ -108,12 +106,12 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
 
             // Load more pages until you can actually scroll
             if (mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0 && mLayoutManager.findLastCompletelyVisibleItemPosition() == mLayoutManager.getItemCount() - 1) {
-                loadNextPage();
+                pendingLoading.set(true);
             } else {
                 mList.scrollToPosition(mFirstVisibleMovie);
             }
         } else {
-            loadNextPage();
+            pendingLoading.set(true);
         }
     }
 
@@ -145,21 +143,37 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
         outState.putParcelableArrayList(LIST_OF_LOADED_MOVIES, mMovies);
     }
 
+    @Override
+    public void serviceConnected() {
+        super.serviceConnected();
+        if (pendingLoading.compareAndSet(true, false)) {
+            loadNextPage();
+        }
+    }
+
     private void loadNextPage() {
         if (isLoading.compareAndSet(false, true)) {
             mProgressContainer.setVisibility(View.VISIBLE);
-            TheMovieDB.getInstance().getMovies(mNextPage, mSortType, this);
+            if (SortProperty.of(mSortType) != SortProperty.FAVORITES) {
+                mService.loadNextPage(mNextPage, mSortType, this);
+            } else {
+                mService.loadNextPageFavorites(mNextPage, this);
+            }
         }
     }
 
     @Override
-    public void success(DiscoverMoviesResponse discoverMoviesResponse, Response response) {
-        isLoading.set(false);
+    public void moviesLoaded(List<Movie> movies) {
         if (isAdded() && !isRemoving()) {
+            isLoading.set(false);
             mProgressContainer.setVisibility(View.INVISIBLE);
-            mNextPage++;
 
-            mMovies.addAll(discoverMoviesResponse.getResults());
+            if (movies == null || movies.isEmpty()) {
+                return;
+            }
+
+            mNextPage++;
+            mMovies.addAll(movies);
             MoviesAdapter adapter = new MoviesAdapter(mMovies);
             adapter.setOnInteractionListener(this);
             mList.swapAdapter(adapter, false);
@@ -172,7 +186,7 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
     }
 
     @Override
-    public void failure(RetrofitError error) {
+    public void loadFail(RetrofitError error) {
         isLoading.set(false);
         if (isAdded() && !isRemoving()) {
             mProgressContainer.setVisibility(View.INVISIBLE);
@@ -195,6 +209,10 @@ public class MovieListFragment extends Fragment implements Callback<DiscoverMovi
             mSortType = sortType;
             mNextPage = 1;
             mMovies.clear();
+
+            MoviesAdapter stub = new MoviesAdapter(null);
+            mList.setAdapter(stub);
+
             loadNextPage();
         }
     }
